@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 # 提取两个信息：
 # 1、获取用于表示具体服务的: cookie_session_id
 # 2、票据标识: my_client_ticket
-import common.encipher
+from common import rwFile
 
 
 def getCookieInfo():
@@ -101,28 +101,35 @@ def getToken(cookieInfo):
         "cookie_session_id": cookieInfo["jsessionid"],
         "my_client_ticket": cookieInfo["ticket"]
     }
-
-    res = requests.post(url=url, headers=headers, cookies=cookie)
-    str = res.text
-    token = json.loads(str[str.index("{"):str.index("}") + 1])['token'];
-    print("Token获取成功")
-    return token;
+    str = ""
+    while(True):
+        try:
+            res = requests.post(url=url, headers=headers, cookies=cookie)
+            str = res.text
+            token = json.loads(str[str.index("{"):str.index("}") + 1])['token'];
+            print("Token获取成功")
+            return token
+        except Exception as e:
+            print(e)
+            print(str.text)
 
 
 def isAvailable(cookieInfo):
-    url = "http://lib-ic.scnu.edu.cn/ClientWeb/pro/ajax/login.aspx?act=is_login&_nocache=1666001921771"
+    url = "http://lib-ic.scnu.edu.cn/ClientWeb/pro/ajax/login.aspx?act=is_login"
 
     headers = {
         "Cookie": "my_client_ticket=%s; ASP.NET_SessionId=%s;" % (cookieInfo["ticket"], cookieInfo["sessionId"]),
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 Edg/106.0.1370.37"
     }
-    res = requests.post(url=url, headers=headers, allow_redirects=False)
+    res = requests.get(url=url, headers=headers, allow_redirects=False)
     state = res.status_code
 
     if state == 200:
         print("直接使用上一次的登录凭证")
         return True
     else:
+        print(res.status_code)
+        print(res.text)
         print("开始自动登录")
         return False
 
@@ -131,12 +138,14 @@ def startLogin(username, password):
     print("==========开始获取身份凭证=============")
     if os.path.exists('../user.dat'):
         # 先直接从文件中读取，并且检验是否有效
-        cookieInfo = common.rwFile.read()
+        cookieInfo = rwFile.read()
+        print(cookieInfo)
         # 满足以下四个条件才能用
         if cookieInfo is not None and \
                 username == cookieInfo['username'] and \
                 password == cookieInfo['password'] and \
                 isAvailable(cookieInfo):
+            print("直接使用上次的登录凭证")
             return cookieInfo
 
     # 开始准备登录
