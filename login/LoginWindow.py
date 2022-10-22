@@ -1,23 +1,27 @@
 import os
-import sys
 
-from PyQt5.QtCore import Qt
+from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtWidgets import QMainWindow, QMessageBox
 
 from common import rwFile,loginApi
-from LoginPage import *
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
+from login import LoginPage
+from reserve.AppointmentWindow import AppointmentWindow
 
 
-class LoginWindow(QMainWindow):
+class LoginMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.ui = Ui_MainWindow()
+        self.ui = LoginPage.Ui_MainWindow()
         self.ui.setupUi(self)
+        # 准备好预约窗口
+        self.afterWin = AppointmentWindow()
 
         self.style_init()
         self.login_button_init()
         self.input_init()
         self.show()
+
+
 
     def style_init(self):
         # 隐藏窗口
@@ -39,12 +43,11 @@ class LoginWindow(QMainWindow):
     # 输入框初始化
     def input_init(self):
         # 自动填充以往的账号密码
-        if os.path.exists('../user.dat'):
-            cookieInfo = rwFile.read()
-            if cookieInfo is not None:
-                self.ui.login_username_input.setText(cookieInfo['username'])
-                self.ui.login_password_input.setText(cookieInfo['password'])
-                self.ui.login_button.setEnabled(True)
+        cookieInfo = rwFile.read()
+        if cookieInfo is not None:
+            self.ui.login_username_input.setText(cookieInfo['username'])
+            self.ui.login_password_input.setText(cookieInfo['password'])
+            self.ui.login_button.setEnabled(True)
 
         self.ui.login_username_input.textChanged.connect(self.check_input_func)
         self.ui.login_password_input.textChanged.connect(self.check_input_func)
@@ -67,14 +70,18 @@ class LoginWindow(QMainWindow):
 
         if cookieInfo is None:
             QMessageBox.critical(self, "提示信息", "账号或密码不正确！")
-            return
+        else:
+            # 如果选择记住，则将相关信息写入到文件
+            if self.ui.is_remember_checkbox.isChecked():
+                cookieInfo['username'] = username
+                cookieInfo['password'] = password
+                rwFile.write(cookieInfo)
+            # QMessageBox.information(self, "提示信息", "登录成功！")
+            # 切换窗口
+            self.afterWin.login_success()
+            self.close()
 
-        # 如果选择记住，则将相关信息写入到文件
-        if self.ui.is_remember_checkbox.isChecked():
-            cookieInfo['username'] = username
-            cookieInfo['password'] = password
-            rwFile.write(cookieInfo)
-        QMessageBox.information(self, "提示信息", "登录成功！")
+
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton and self.isMaximized() == False:
@@ -93,8 +100,4 @@ class LoginWindow(QMainWindow):
         self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
 
 
-if __name__ == '__main__':
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)  # 设置不同分辨率屏幕自适应
-    app = QApplication(sys.argv)
-    win = LoginWindow()
-    sys.exit(app.exec_())
+
