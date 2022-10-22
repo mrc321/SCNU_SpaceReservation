@@ -167,4 +167,4 @@ class Ui_MainWindow(object):
         self.login_button.setText(_translate("MainWindow", "登录"))
         self.is_remember_checkbox.setText(_translate("MainWindow", "记住"))
         self.label_3.setText(_translate("MainWindow", "SCNU空间预约"))
-import resource_rc
+from login import resource_rc
