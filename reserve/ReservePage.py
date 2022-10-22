@@ -597,4 +597,4 @@ class Ui_AppointmentWindow(object):
         self.reserve2_data_label.setText(_translate("AppointmentWindow", "后天的日期"))
         self.label_12.setText(_translate("AppointmentWindow", "微格"))
         self.start_weige_button.setText(_translate("AppointmentWindow", "开始预约"))
-import resource_rc
+from reserve import resource_rc

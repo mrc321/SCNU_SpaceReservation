@@ -136,17 +136,15 @@ def isAvailable(cookieInfo):
 
 def startLogin(username, password):
     print("==========开始获取身份凭证=============")
-    if os.path.exists('../user.dat'):
-        # 先直接从文件中读取，并且检验是否有效
-        cookieInfo = rwFile.read()
-        print(cookieInfo)
-        # 满足以下四个条件才能用
-        if cookieInfo is not None and \
-                username == cookieInfo['username'] and \
-                password == cookieInfo['password'] and \
-                isAvailable(cookieInfo):
-            print("直接使用上次的登录凭证")
-            return cookieInfo
+    # 先直接从文件中读取，并且检验是否有效
+    cookieInfo = rwFile.read()
+    # 满足以下四个条件才能用
+    if cookieInfo is not None and \
+            username == cookieInfo['username'] and \
+            password == cookieInfo['password'] and \
+            isAvailable(cookieInfo):
+        print("直接使用上次的登录凭证")
+        return cookieInfo
 
     # 开始准备登录
     cookieInfo = getCookieInfo()
